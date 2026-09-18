@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <title>Shadcn Dashboard - React Admin Dashboard Template</title>
+    <meta
+      name="description"
+      content="Free, open source admin dashboard starter built with React, Vite, shadcn/ui, Tailwind CSS, and TypeScript."
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Shadcn Dashboard" />
+    <meta
+      property="og:title"
+      content="Shadcn Dashboard - React Admin Dashboard Template"
+    />
+    <meta
+      property="og:description"
+      content="Free, open source admin dashboard starter built with React, Vite, shadcn/ui, Tailwind CSS, and TypeScript."
+    />
+    <meta property="og:image" content="/shadcn-dashboard.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Shadcn Dashboard - React Admin Dashboard Template"
+    />
+    <meta name="twitter:image" content="/shadcn-dashboard.png" />
+
+    <!-- Fonts. Replaces next/font/google; the CSS variables these back are
+         declared in src/styles/fonts.css. Keep the two lists in sync. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Noto+Sans+Mono:wght@100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Pre-paint theme seed. Replaces the cookies() read in the Next root
+      // layout: stamp data-theme + the dark class before first paint so there
+      // is no flash of the wrong palette.
+      (function () {
+        try {
+          var m = document.cookie.match(/(?:^|; )active_theme=([^;]*)/);
+          document.documentElement.dataset.theme = m
+            ? decodeURIComponent(m[1])
+            : 'vercel';
+
+          var t = localStorage.theme;
+          var dark =
+            t === 'dark' ||
+            ((!t || t === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) {
+            document.documentElement.classList.add('dark');
+            document
+              .querySelector('meta[name="theme-color"]')
+              ?.setAttribute('content', '#09090b');
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-background overflow-x-hidden overscroll-none font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,253 @@
+# golangci-lint v2 configuration.
+#
+# Two ideas worth keeping:
+#   1. default: none plus an explicit enable list. New linters never appear
+#      unannounced on a version bump, and every entry here was a decision.
+#   2. depguard encodes the layering, so the architecture is checked by CI
+#      instead of by code review. See the depguard settings below.
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - asasalint
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - govet
+    - ineffassign
+    - loggercheck
+    - makezero
+    - nilerr
+    - nilnesserr
+    - noctx
+    - reassign
+    - recvcheck
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unused
+    - usestdlibvars
+    - usetesting
+
+    # Architecture and API hygiene
+    - depguard
+    - errname
+    - gochecknoinits
+    - iface
+    - importas
+    - inamedparam
+    - interfacebloat
+    - predeclared
+    - unconvert
+    - unparam
+
+    # Readability and complexity
+    - cyclop
+    - dupl
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - lll
+    - misspell
+    - mnd
+    - nakedret
+    - nestif
+    - nolintlint
+    - perfsprint
+    - prealloc
+    - revive
+    - whitespace
+
+    # Security
+    - gosec
+
+    # Tests
+    - testifylint
+    - thelper
+    - tparallel
+
+  settings:
+    depguard:
+      rules:
+        # The domain is the centre: it may import the standard library and a
+        # couple of value-type helpers, and nothing else in this module.
+        domain:
+          list-mode: lax
+          files:
+            - "**/internal/domain/**"
+          deny:
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/application
+              desc: "the domain must not depend on the application layer"
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/infrastructure
+              desc: "the domain must not depend on infrastructure; declare a port here and implement it there"
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/interfaces
+              desc: "the domain must not depend on inbound adapters"
+            - pkg: github.com/kethaka-creskit/go-ddd-service/pkg
+              desc: "the domain must not depend on transport or database plumbing"
+            - pkg: github.com/kethaka-creskit/go-ddd-service/config
+              desc: "the domain must not read configuration; pass values in"
+            - pkg: github.com/jackc/pgx
+              desc: "no database driver in the domain"
+            - pkg: github.com/go-chi/chi
+              desc: "no HTTP router in the domain"
+            - pkg: net/http
+              desc: "no HTTP in the domain"
+
+        # The application layer orchestrates the domain. It may not know which
+        # database or transport is in use.
+        application:
+          list-mode: lax
+          files:
+            - "**/internal/application/**"
+          deny:
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/infrastructure
+              desc: "the application layer must depend on ports, not on their implementations"
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/interfaces
+              desc: "the application layer must not depend on inbound adapters"
+            - pkg: github.com/jackc/pgx
+              desc: "use the TxManager port instead of pgx directly"
+            - pkg: github.com/go-chi/chi
+              desc: "no HTTP router in the application layer"
+            - pkg: net/http
+              desc: "no HTTP in the application layer"
+
+        # Inbound adapters talk to the application layer and map domain types.
+        # They must not reach past it into persistence.
+        interfaces:
+          list-mode: lax
+          files:
+            - "**/internal/interfaces/**"
+          deny:
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/infrastructure
+              desc: "handlers must go through an application service, not the repository"
+            - pkg: github.com/jackc/pgx
+              desc: "declare a narrow port (see rest.Pinger) instead of importing pgx"
+
+        # httpx is the transport toolbox every resource package shares. The
+        # moment it imports a domain package it stops being shareable: it can
+        # only ever name one aggregate's types, which is exactly the corner the
+        # flat rest package painted itself into. Map sentinels in the resource
+        # package's statusFor and hand httpx an httpx.Status instead.
+        rest-httpx:
+          list-mode: lax
+          files:
+            - "**/internal/interfaces/rest/httpx/**"
+          deny:
+            - pkg: github.com/kethaka-creskit/go-ddd-service/internal/domain
+              desc: "httpx must stay domain-agnostic; map sentinels in the resource package's statusFor"
+
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    funlen:
+      lines: 80
+      statements: 50
+
+    cyclop:
+      max-complexity: 15
+
+    gocognit:
+      min-complexity: 25
+
+    gocyclo:
+      min-complexity: 20
+
+    goconst:
+      min-len: 3
+      min-occurrences: 4
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        # Rewrites if/else into switch; not always clearer.
+        - ifElseChain
+
+    lll:
+      line-length: 120
+
+    mnd:
+      ignored-functions:
+        - strconv.ParseInt
+        - strconv.ParseFloat
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+        - name: var-naming
+        - name: indent-error-flow
+        - name: errorf
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: unreachable-code
+        - name: redefines-builtin-id
+
+    testifylint:
+      enable-all: true
+
+  exclusions:
+    generated: lax
+    rules:
+      # Generated query code: sqlc owns its style, and its Queries type is
+      # legitimately wide.
+      - path: internal/infrastructure/persistence/sqlcgen/
+        linters:
+          - lll
+          - dupl
+          - funlen
+          - interfacebloat
+          - godot
+          - revive
+
+      # Tests: table-driven cases repeat by design, and fixtures are long.
+      - path: _test\.go
+        linters:
+          - dupl
+          - funlen
+          - gocognit
+          - cyclop
+          - lll
+          - goconst
+          - gosec
+          - mnd
+          - interfacebloat
+
+      # Wire's injector stubs return nil literals that the real code never runs.
+      - path: internal/wire\.go
+        linters:
+          - unparam
+          - revive
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/kethaka-creskit/go-ddd-service

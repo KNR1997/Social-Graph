@@ -1,0 +1,16 @@
+# Local configuration
+.env
+
+# Build output
+/bin/
+/dist/
+
+# Test and coverage artifacts
+coverage.out
+coverage.html
+*.test
+
+# Editors
+.idea/
+.vscode/
+*.swp

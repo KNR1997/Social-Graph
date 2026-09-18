@@ -16,6 +16,7 @@ import (
 	"github.com/kethaka-creskit/go-ddd-service/internal/application"
 	accountentity "github.com/kethaka-creskit/go-ddd-service/internal/domain/account/entity"
 	authentity "github.com/kethaka-creskit/go-ddd-service/internal/domain/auth/entity"
+	personentity "github.com/kethaka-creskit/go-ddd-service/internal/domain/person/entity"
 	postentity "github.com/kethaka-creskit/go-ddd-service/internal/domain/post/entity"
 	"github.com/kethaka-creskit/go-ddd-service/internal/infrastructure/persistence"
 	"github.com/kethaka-creskit/go-ddd-service/internal/infrastructure/security"
@@ -23,6 +24,7 @@ import (
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest"
 	accountrest "github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/account"
 	authrest "github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/auth"
+	personrest "github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/person"
 	postrest "github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/post"
 	"github.com/kethaka-creskit/go-ddd-service/pkg/httpserver"
 	"github.com/kethaka-creskit/go-ddd-service/pkg/logger"
@@ -37,6 +39,7 @@ var coreSet = wire.NewSet(
 	logger.New,
 
 	persistence.NewAccountRepository,
+	persistence.NewPersonRepository,
 	persistence.NewPostRepository,
 	persistence.NewUserRepository,
 	persistence.NewSessionRepository,
@@ -53,10 +56,12 @@ var coreSet = wire.NewSet(
 	provideCookieConfig,
 
 	application.NewAccountService,
+	application.NewPersonService,
 	application.NewPostService,
 	application.NewAuthService,
 
 	accountrest.NewHandler,
+	personrest.NewHandler,
 	postrest.NewHandler,
 	authrest.NewHandler,
 	rest.NewRouter,
@@ -67,11 +72,13 @@ var coreSet = wire.NewSet(
 	// The bindings. Each one points from an inner-layer interface to its
 	// outer-layer implementation, which is the dependency inversion made literal.
 	wire.Bind(new(accountentity.Repository), new(*persistence.AccountRepository)),
+	wire.Bind(new(personentity.Repository), new(*persistence.PersonRepository)),
 	wire.Bind(new(postentity.Repository), new(*persistence.PostRepository)),
 	wire.Bind(new(application.TxManager), new(*persistence.TxManager)),
 	wire.Bind(new(application.Clock), new(system.Clock)),
 	wire.Bind(new(application.IDGenerator), new(system.IDGenerator)),
 	wire.Bind(new(accountrest.Service), new(*application.AccountService)),
+	wire.Bind(new(personrest.Service), new(*application.PersonService)),
 	wire.Bind(new(postrest.Service), new(*application.PostService)),
 	wire.Bind(new(authentity.UserRepository), new(*persistence.UserRepository)),
 	wire.Bind(new(authentity.SessionRepository), new(*persistence.SessionRepository)),

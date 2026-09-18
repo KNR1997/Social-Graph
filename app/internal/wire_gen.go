@@ -13,14 +13,16 @@ import (
 	"github.com/kethaka-creskit/go-ddd-service/config"
 	"github.com/kethaka-creskit/go-ddd-service/internal/application"
 	"github.com/kethaka-creskit/go-ddd-service/internal/domain/account/entity"
-	entity3 "github.com/kethaka-creskit/go-ddd-service/internal/domain/auth/entity"
-	entity2 "github.com/kethaka-creskit/go-ddd-service/internal/domain/post/entity"
+	entity4 "github.com/kethaka-creskit/go-ddd-service/internal/domain/auth/entity"
+	entity2 "github.com/kethaka-creskit/go-ddd-service/internal/domain/person/entity"
+	entity3 "github.com/kethaka-creskit/go-ddd-service/internal/domain/post/entity"
 	"github.com/kethaka-creskit/go-ddd-service/internal/infrastructure/persistence"
 	"github.com/kethaka-creskit/go-ddd-service/internal/infrastructure/security"
 	"github.com/kethaka-creskit/go-ddd-service/internal/infrastructure/system"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/account"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/auth"
+	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/person"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/post"
 	"github.com/kethaka-creskit/go-ddd-service/pkg/httpserver"
 	"github.com/kethaka-creskit/go-ddd-service/pkg/logger"
@@ -50,10 +52,13 @@ func InitializeAPI(ctx context.Context, cfg *config.Config) (*API, error) {
 	accountRepository := persistence.NewAccountRepository(pool)
 	accountService := application.NewAccountService(accountRepository, txManager, clock, idGenerator, slogLogger)
 	accountHandler := account.NewHandler(accountService, slogLogger)
+	personRepository := persistence.NewPersonRepository(pool)
+	personService := application.NewPersonService(personRepository, txManager, clock, idGenerator, slogLogger)
+	personHandler := person.NewHandler(personService, slogLogger)
 	postRepository := persistence.NewPostRepository(pool)
 	postService := application.NewPostService(postRepository, txManager, clock, idGenerator, slogLogger)
 	postHandler := post.NewHandler(postService, slogLogger)
-	httpHandler := rest.NewRouter(cfg, handler, accountHandler, postHandler, pool, slogLogger)
+	httpHandler := rest.NewRouter(cfg, handler, accountHandler, personHandler, postHandler, pool, slogLogger)
 	server := httpserver.New(cfg, httpHandler)
 	api := &API{
 		Server:  server,
@@ -81,10 +86,13 @@ func InitializeAPIWithPool(cfg *config.Config, pool *pgxpool.Pool) *API {
 	accountRepository := persistence.NewAccountRepository(pool)
 	accountService := application.NewAccountService(accountRepository, txManager, clock, idGenerator, slogLogger)
 	accountHandler := account.NewHandler(accountService, slogLogger)
+	personRepository := persistence.NewPersonRepository(pool)
+	personService := application.NewPersonService(personRepository, txManager, clock, idGenerator, slogLogger)
+	personHandler := person.NewHandler(personService, slogLogger)
 	postRepository := persistence.NewPostRepository(pool)
 	postService := application.NewPostService(postRepository, txManager, clock, idGenerator, slogLogger)
 	postHandler := post.NewHandler(postService, slogLogger)
-	httpHandler := rest.NewRouter(cfg, handler, accountHandler, postHandler, pool, slogLogger)
+	httpHandler := rest.NewRouter(cfg, handler, accountHandler, personHandler, postHandler, pool, slogLogger)
 	server := httpserver.New(cfg, httpHandler)
 	api := &API{
 		Server:  server,
@@ -101,6 +109,6 @@ func InitializeAPIWithPool(cfg *config.Config, pool *pgxpool.Pool) *API {
 // Splitting the graph here is what lets the integration tests reuse the exact
 // production wiring against a throwaway container pool, instead of maintaining
 // a second, subtly different graph.
-var coreSet = wire.NewSet(logger.New, persistence.NewAccountRepository, persistence.NewPostRepository, persistence.NewUserRepository, persistence.NewSessionRepository, persistence.NewTxManager, system.NewClock, system.NewIDGenerator, security.NewHasher, security.NewTokenGenerator, provideSessionTTL,
-	provideCookieConfig, application.NewAccountService, application.NewPostService, application.NewAuthService, account.NewHandler, post.NewHandler, auth.NewHandler, rest.NewRouter, httpserver.New, wire.Struct(new(API), "*"), wire.Bind(new(entity.Repository), new(*persistence.AccountRepository)), wire.Bind(new(entity2.Repository), new(*persistence.PostRepository)), wire.Bind(new(application.TxManager), new(*persistence.TxManager)), wire.Bind(new(application.Clock), new(system.Clock)), wire.Bind(new(application.IDGenerator), new(system.IDGenerator)), wire.Bind(new(account.Service), new(*application.AccountService)), wire.Bind(new(post.Service), new(*application.PostService)), wire.Bind(new(entity3.UserRepository), new(*persistence.UserRepository)), wire.Bind(new(entity3.SessionRepository), new(*persistence.SessionRepository)), wire.Bind(new(application.PasswordHasher), new(*security.Hasher)), wire.Bind(new(application.TokenGenerator), new(security.TokenGenerator)), wire.Bind(new(auth.Service), new(*application.AuthService)),
+var coreSet = wire.NewSet(logger.New, persistence.NewAccountRepository, persistence.NewPersonRepository, persistence.NewPostRepository, persistence.NewUserRepository, persistence.NewSessionRepository, persistence.NewTxManager, system.NewClock, system.NewIDGenerator, security.NewHasher, security.NewTokenGenerator, provideSessionTTL,
+	provideCookieConfig, application.NewAccountService, application.NewPersonService, application.NewPostService, application.NewAuthService, account.NewHandler, person.NewHandler, post.NewHandler, auth.NewHandler, rest.NewRouter, httpserver.New, wire.Struct(new(API), "*"), wire.Bind(new(entity.Repository), new(*persistence.AccountRepository)), wire.Bind(new(entity2.Repository), new(*persistence.PersonRepository)), wire.Bind(new(entity3.Repository), new(*persistence.PostRepository)), wire.Bind(new(application.TxManager), new(*persistence.TxManager)), wire.Bind(new(application.Clock), new(system.Clock)), wire.Bind(new(application.IDGenerator), new(system.IDGenerator)), wire.Bind(new(account.Service), new(*application.AccountService)), wire.Bind(new(person.Service), new(*application.PersonService)), wire.Bind(new(post.Service), new(*application.PostService)), wire.Bind(new(entity4.UserRepository), new(*persistence.UserRepository)), wire.Bind(new(entity4.SessionRepository), new(*persistence.SessionRepository)), wire.Bind(new(application.PasswordHasher), new(*security.Hasher)), wire.Bind(new(application.TokenGenerator), new(security.TokenGenerator)), wire.Bind(new(auth.Service), new(*application.AuthService)),
 )

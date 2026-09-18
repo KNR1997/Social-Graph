@@ -1,0 +1,42 @@
+/* ============================================================
+   Font variables — replaces next/font/google
+   ============================================================
+   The Next version generated these variables from next/font and applied
+   them via a className on <body>. Here the families are loaded by the
+   <link> in index.html and the variables are declared once on `html`.
+
+   Declared on the bare `html` element selector (specificity 0,0,1) ON
+   PURPOSE: the per-theme overrides in styles/themes/*.css use
+   [data-theme='x'] (specificity 0,1,0) on the same element, so a theme's
+   --font-sans always wins over these defaults regardless of import order.
+   That is what removes the need for the `--font-sans: initial` hack the
+   Next version needed in theme.css.
+
+   Keep this list in sync with the Google Fonts <link> in index.html.
+   ============================================================ */
+
+html {
+  /* Defaults (next/font mapped Geist -> --font-sans, Geist Mono -> --font-mono) */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+
+  /* Per-family variables referenced by styles/themes/*.css */
+  --font-architects-daughter: 'Architects Daughter', cursive;
+  --font-dm-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-fira-code: 'Fira Code', ui-monospace, monospace;
+  --font-instrument: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-merriweather: 'Merriweather', ui-serif, Georgia, serif;
+  --font-mullish: 'Mulish', ui-sans-serif, system-ui, sans-serif;
+  --font-noto-mono: 'Noto Sans Mono', ui-monospace, monospace;
+  --font-outfit: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-playfair-display: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-source-code-pro: 'Source Code Pro', ui-monospace, monospace;
+  --font-space-mono: 'Space Mono', ui-monospace, monospace;
+
+  /* Google Sans Flex is not served by the Google Fonts css2 API, so it
+     resolves to the system sans stack rather than 404-ing a webfont. */
+  --font-google-sans-flex: ui-sans-serif, system-ui, sans-serif;
+}

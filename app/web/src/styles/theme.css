@@ -1,0 +1,29 @@
+/* Import individual theme files */
+@import './themes/claude.css';
+@import './themes/discord.css';
+@import './themes/supabase.css';
+@import './themes/vercel.css';
+@import './themes/mono.css';
+@import './themes/notebook.css';
+@import './themes/light-green.css';
+@import './themes/zen.css';
+@import './themes/astro-vista.css';
+@import './themes/whatsapp.css';
+
+body {
+  @apply overscroll-none;
+}
+
+:root {
+  --header-height: calc(var(--spacing, 0.25rem) * 12 + 1px);
+}
+
+/* Apply theme fonts to body for all themes.
+   The Next version additionally reset --font-sans/--font-mono/--font-serif to
+   `initial` here, because next/font declared those variables on <body> via a
+   className and they shadowed the [data-theme] values set on <html>. In this
+   port the defaults live on the bare `html` selector in fonts.css, which
+   [data-theme] (0,1,0) already outranks, so the reset is unnecessary. */
+body {
+  font-family: var(--font-sans);
+}

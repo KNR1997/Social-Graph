@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Account struct {
@@ -16,6 +17,22 @@ type Account struct {
 	BalanceMinor int64
 	Currency     string
 	Status       string
+	Version      int64
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type Person struct {
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	IsSelf       bool
+	FullName     string
+	Email        pgtype.Text
+	Phone        pgtype.Text
+	Occupation   pgtype.Text
+	Organization pgtype.Text
+	Location     pgtype.Text
+	Notes        pgtype.Text
 	Version      int64
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

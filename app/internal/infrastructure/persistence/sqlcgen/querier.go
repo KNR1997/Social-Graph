@@ -12,11 +12,28 @@ import (
 )
 
 type Querier interface {
+	// CountPersons exists so a paginated response can report a total. It repeats
+	// ListPersons' predicate deliberately: the two must agree, and a count that
+	// quietly filters differently is worse than no count at all.
+	CountPersons(ctx context.Context, arg CountPersonsParams) (int64, error)
 	DeleteExpiredSessions(ctx context.Context, expiresAt time.Time) (int64, error)
+	// DeletePerson is a hard delete (PLAN D7): the row's relationships and their
+	// interactions go with it by cascade, and anyone introduced through this person
+	// keeps their history with met_through_person_id set to null.
+	//
+	// The self person is excluded. Deleting it would strip the user of the node
+	// every one of their relationships runs from, and the partial unique index
+	// means registration cannot simply recreate it.
+	DeletePerson(ctx context.Context, arg DeletePersonParams) (int64, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteSessionsByUser(ctx context.Context, userID uuid.UUID) error
 	GetAccount(ctx context.Context, id uuid.UUID) (Account, error)
+	GetPerson(ctx context.Context, arg GetPersonParams) (Person, error)
 	GetPost(ctx context.Context, id uuid.UUID) (Post, error)
+	// GetSelfPerson loads the user's own node in the graph. Every MVP relationship
+	// runs from this row (PLAN D1), so the relationship use cases resolve it on
+	// create rather than trusting a from_person_id off the request body.
+	GetSelfPerson(ctx context.Context, userID uuid.UUID) (Person, error)
 	// GetSessionByTokenHash filters on expiry in the query as well as in the
 	// aggregate. Doing it here means an expired session cannot be loaded at all,
 	// which keeps a bug in a future caller from turning into an authentication
@@ -26,15 +43,38 @@ type Querier interface {
 	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	InsertAccount(ctx context.Context, arg InsertAccountParams) error
+	// Every statement in this file is scoped by user_id, without exception. That is
+	// PLAN D3: ownership is enforced here rather than in the handler, so a use case
+	// that forgets a check gets "not found" instead of another user's data. A query
+	// added below without a user_id predicate is a security bug, not a style slip.
+	InsertPerson(ctx context.Context, arg InsertPersonParams) error
 	InsertPost(ctx context.Context, arg InsertPostParams) error
 	InsertSession(ctx context.Context, arg InsertSessionParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) error
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
+	// ListPersons is both the list and the search endpoint, as one query with an
+	// optional term (PLAN M2). ILIKE '%...%' is served by the trigram indexes on
+	// full_name and organization (PLAN D8), which is why the term is matched with a
+	// substring pattern rather than a prefix.
+	//
+	// The self person is excluded: it is the user's own node, not someone they
+	// know, and leaving it in puts every user in their own contact list and makes
+	// the people count off by one. GetSelfPerson is how that row is reached.
+	ListPersons(ctx context.Context, arg ListPersonsParams) ([]Person, error)
 	ListPosts(ctx context.Context, arg ListPostsParams) ([]Post, error)
 	// UpdateAccount is the optimistic-lock write: it only matches while the row is
 	// still at the version we loaded, and returns the affected row count so the
 	// repository can turn 0 into entity.ErrConflict.
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (int64, error)
+	// UpdatePerson is the optimistic-lock write: it only matches while the row is
+	// still at the version we loaded. It returns the version it assigned, so the
+	// caller can report the current one rather than the stale one it wrote with; no
+	// row coming back is what the repository turns into entity.ErrConflict.
+	//
+	// user_id and is_self are not in the SET list. Ownership and the identity of
+	// the self node are not editable facts, so there is no statement here that can
+	// change them.
+	UpdatePerson(ctx context.Context, arg UpdatePersonParams) (int64, error)
 	// UpdatePost is the optimistic-lock write: it only matches while the row is
 	// still at the version we loaded, and returns the affected row count so the
 	// repository can turn 0 into entity.ErrConflict.

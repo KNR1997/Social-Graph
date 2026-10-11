@@ -16,6 +16,7 @@ import (
 	"github.com/kethaka-creskit/go-ddd-service/config"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/account"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/auth"
+	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/person"
 	"github.com/kethaka-creskit/go-ddd-service/internal/interfaces/rest/post"
 	"github.com/kethaka-creskit/go-ddd-service/pkg/logger"
 )
@@ -35,6 +36,7 @@ func NewRouter(
 	cfg *config.Config,
 	sessions *auth.Handler,
 	accounts *account.Handler,
+	persons *person.Handler,
 	posts *post.Handler,
 	db Pinger,
 	log *slog.Logger,
@@ -66,6 +68,7 @@ func NewRouter(
 			r.Use(sessions.RequireSession)
 
 			r.Mount("/accounts", accounts.Routes())
+			r.Mount("/people", persons.Routes())
 			r.Mount("/posts", posts.Routes())
 		})
 	})
